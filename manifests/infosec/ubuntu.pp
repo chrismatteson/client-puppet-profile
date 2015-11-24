@@ -44,7 +44,7 @@ class profile::infosec::ubuntu (
       notify { "$directory exists":
         message => "The $directory directory does have an entry in fstab.  This does not confirm if it's mounted correctly however",
       }
-      mount "$directory" {
+      mount { "$directory":
         ensure  => 'present',
         options => "$checkdirectories[$directory]",
       }
@@ -144,8 +144,8 @@ class profile::infosec::ubuntu (
   keys($networksettings).each |String $setting| {
     file_line { '$setting':
       path   => '/etc/sysctl.conf',
-      line   => "$setting = $networksettings[$setting],
-      match  => '^$setting = [01]',
+      line   => "$setting = $networksettings[$setting]",
+      match  => "^$setting = [01]",
     }
   }
 
