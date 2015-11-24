@@ -6,6 +6,31 @@ class profile::infosec::ubuntu (
                        '/home'          => 'nodev',
                       },
   $disablefsmodules = ['cramfs','freevxfs','jffs','hfs','hfsplus','squashfs','udf'],
+  $disableservices = ['nis,rsh-redone-client,talk,telnet,tftp,xinetd,chargen,daytime,echo,discard,time'],
+  $networksettings = {'net.ipv4.ip_forward'                 => 0,
+                      'net.ipv4.conf.all.send_requests'     => 0,
+                      'net.ipv4.conf.default.send_requests' => 0,
+                      'net.ipv4.conf.all.accept_source_route' => 0,
+                      'net.ipv4.conf.default_accept_source_route' => 0,
+                      'net.ipv4.conf.all.accept_redirects'        => 0,
+                      'net.ipv4.conf.default.accept_redirects'    => 0,
+                      'net.ipv4.conf.all.secure_redirects'        => 0,
+                      'net.ipv4.conf.default.secure_redirects'    => 0,
+                      'net.ipv4.conf.all.log_martians'            => 1,
+                      'net.ipv4.conf.default.log_martians'        => 1,
+                      'net.ipv4.icmp_echo_ignore_broadcasts'      => 1,
+                      'net.ipv4.icmp_ignore_bogus_error_responses' => 1,
+                      'net.ipv4.conf.all.rp_filter'                => 1,
+                      'net.ipv4.conf.default.rp_filter'            => 1,
+                      'net.ipv4.tcp_syncookies'                    => 1,
+                      'net.ipv6.conf.all.accept_ra'                => 0,
+                      'net.ipv6.conf.default.accept_ra'            => 0,
+                      'net.ipv6.conf.all.accept_redirects'         => 0,
+                      'net.ipv6.conf.default.accept_redirects'     => 0,
+                      'net.ipv6.conf.all.disable_ipv6'             => 1,
+                      'net.ipv6.conf.default.disable_ipv6'         => 1,
+                      'net.ipv6.conf.lo.disable_ipv6'              => 1,
+                    },
 ) {
 
 # (1) Patching and Software Updates
@@ -89,5 +114,39 @@ class profile::infosec::ubuntu (
 
 # (5) OS Services
 
+  $disableservices.each |String $service| {
+     service { "$service":
+       ensure => 'stopped',
+       enable => false,
+     }
+
+     package { "$service":
+       ensure => 'absent',
+     }
+  }
+
+# (6) Special Purpose Services
+
+# Solved removing extra packages using Hiera with $disableservices variable
+
+# Need to add hiera entries for this to meet compliance requirements, or enter
+# here and have to manage idempotence
+  include ntp
+
+  file_line { 'Local Mail Only':
+    line  => 'inet_interfaces = localhost',
+    path  => '/etc/postfix/conf.cf',
+    match => 'inet_interfaces = ',
+  }
+
+# (7) Network Configuration and Firewalls
+
+  $networksettings[$key].each |String $setting| {
+    file_line { '$setting':
+      path   => '/etc/sysctl.conf',
+      line   => "$setting = $networksettings[$setting],
+      match  => '^$setting = [01]',
+    }
+  }
 }
 
