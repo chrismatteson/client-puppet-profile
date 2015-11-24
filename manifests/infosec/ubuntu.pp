@@ -5,20 +5,20 @@ class profile::infosec::ubuntu (
                        '/var/log/audit' => undef,
                        '/home'          => 'nodev',
                       },
-  $disablefsmodules = ['cramfs','freevxfs','jffs','hfs','hfsplus','squashfs','udf'],
+  $disablemodules = ['cramfs','freevxfs','jffs','hfs','hfsplus','squashfs','udf','dccp','sctp','rds','tipc'],
   $disableservices = ['nis,rsh-redone-client,talk,telnet,tftp,xinetd,chargen,daytime,echo,discard,time'],
-  $networksettings = {'net.ipv4.ip_forward'                 => 0,
-                      'net.ipv4.conf.all.send_requests'     => 0,
-                      'net.ipv4.conf.default.send_requests' => 0,
-                      'net.ipv4.conf.all.accept_source_route' => 0,
-                      'net.ipv4.conf.default_accept_source_route' => 0,
-                      'net.ipv4.conf.all.accept_redirects'        => 0,
-                      'net.ipv4.conf.default.accept_redirects'    => 0,
-                      'net.ipv4.conf.all.secure_redirects'        => 0,
-                      'net.ipv4.conf.default.secure_redirects'    => 0,
-                      'net.ipv4.conf.all.log_martians'            => 1,
-                      'net.ipv4.conf.default.log_martians'        => 1,
-                      'net.ipv4.icmp_echo_ignore_broadcasts'      => 1,
+  $networksettings = {'net.ipv4.ip_forward'                        => 0,
+                      'net.ipv4.conf.all.send_requests'            => 0,
+                      'net.ipv4.conf.default.send_requests'        => 0,
+                      'net.ipv4.conf.all.accept_source_route'      => 0,
+                      'net.ipv4.conf.default_accept_source_route'  => 0,
+                      'net.ipv4.conf.all.accept_redirects'         => 0,
+                      'net.ipv4.conf.default.accept_redirects'     => 0,
+                      'net.ipv4.conf.all.secure_redirects'         => 0,
+                      'net.ipv4.conf.default.secure_redirects'     => 0,
+                      'net.ipv4.conf.all.log_martians'             => 1,
+                      'net.ipv4.conf.default.log_martians'         => 1,
+                      'net.ipv4.icmp_echo_ignore_broadcasts'       => 1,
                       'net.ipv4.icmp_ignore_bogus_error_responses' => 1,
                       'net.ipv4.conf.all.rp_filter'                => 1,
                       'net.ipv4.conf.default.rp_filter'            => 1,
@@ -75,10 +75,10 @@ class profile::infosec::ubuntu (
 # (3) Secure Boot Settings
 
   file { '/boot/grub/grub.conf':
-    ensure      => 'file',
-    owner       => 'root',
-    group       => 'root',
-    permissions => 0600,
+    ensure => 'file',
+    owner  => 'root',
+    group  => 'root',
+    mode   => 600,
   }
 
 # (4) Additional Process Hardening
@@ -148,5 +148,26 @@ class profile::infosec::ubuntu (
       match  => '^$setting = [01]',
     }
   }
+
+  package { 'tcpd':
+    ensure => 'present',
+  }
+
+  file { ['/etc/hosts.allow','/etc/hosts.deny']:
+    ensure => 'file',
+    mode   => 644,
+  }
+
+# 7.4 is handled by the disable modules loop
+
+  include networkmanager #Might not want this?
+# Need to find a way to run 'nmcli nm wifi off'.  Maybe with an exec?
+
+  include firewall
+
+# (8) Logging and Auditing
+
+
+
 }
 
