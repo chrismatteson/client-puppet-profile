@@ -31,6 +31,7 @@ class profile::infosec::ubuntu (
                       'net.ipv6.conf.default.disable_ipv6'         => 1,
                       'net.ipv6.conf.lo.disable_ipv6'              => 1,
                     },
+  $cronfolders = ['/etc/crontab','/etc/cron.hourly','/etc/cron.daily','/etc/cron.weekly','/etc/cron.monthly','/etc/cron.d'],
 ) {
 
 # (1) Patching and Software Updates
@@ -147,6 +148,11 @@ class profile::infosec::ubuntu (
       line   => "$setting = $networksettings[$setting]",
       match  => "^$setting = [01]",
     }
+
+    exec { '$setting':
+      command => "/sbin/sysctl -w $setting=$networksettings[$setting]",
+      unless  => "[ `/sbin/sysctl -n $setting"` = $networksettings[$setting] ]",
+    }
   }
 
   package { 'tcpd':
@@ -166,6 +172,39 @@ class profile::infosec::ubuntu (
   include firewall
 
 # (8) Logging and Auditing
+
+# Restrict log files to root and not world readable?  Besides being
+# redundant won't this conflict with below?
+
+  syslog { 'Authpriv':
+    ensure        => present,
+    facility      => 'Authpriv',
+    action_type   => 'file',
+    action        => '/var/log/secure',
+  }
+
+# Setting all these log file permissions will be a hassle if we can't
+# assume that the files should even exist.  I could create them, or
+# write testing code to check for them, but there is likely a better
+# way to handle this situation.
+
+# There are several required parameters for the auditd::config class
+# which we could explitely call here, but would probably be better
+# handled with Hiera.
+  include auditd
+
+# We should probably specify the rotate parameters in Hiera
+  include syslog
+
+# (9) Configure Cron
+
+  $cronfolders.each |String $folder| {
+
+    file { "$folder":
+      ensure  => folder,
+      mode    => 400,
+      recurse => true,
+    }
 
 
 
