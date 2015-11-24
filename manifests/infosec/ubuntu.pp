@@ -6,7 +6,7 @@ class profile::infosec::ubuntu (
                        '/home'          => 'nodev',
                       },
   $disablemodules = ['cramfs','freevxfs','jffs','hfs','hfsplus','squashfs','udf','dccp','sctp','rds','tipc'],
-  $disableservices = ['nis,rsh-redone-client,talk,telnet,tftp,xinetd,chargen,daytime,echo,discard,time'],
+  $disableservices = ['nis','rsh-redone-client','talk','telnet','tftp','xinetd','chargen','daytime','echo','discard','time'],
   $networksettings = {'net.ipv4.ip_forward'                        => 0,
                       'net.ipv4.conf.all.send_requests'            => 0,
                       'net.ipv4.conf.default.send_requests'        => 0,
@@ -39,7 +39,7 @@ class profile::infosec::ubuntu (
 
 # (2) File System Configuration
 
-  $checkdirectories[$key].each |String $directory| {
+  keys($checkdirectories).each |String $directory| {
     if $::partitions["$directory"] {
       notify { "$directory exists":
         message => "The $directory directory does have an entry in fstab.  This does not confirm if it's mounted correctly however",
@@ -141,7 +141,7 @@ class profile::infosec::ubuntu (
 
 # (7) Network Configuration and Firewalls
 
-  $networksettings[$key].each |String $setting| {
+  keys($networksettings).each |String $setting| {
     file_line { '$setting':
       path   => '/etc/sysctl.conf',
       line   => "$setting = $networksettings[$setting],
