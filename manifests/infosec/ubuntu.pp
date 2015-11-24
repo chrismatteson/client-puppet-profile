@@ -8,6 +8,12 @@ class profile::infosec::ubuntu (
   $disablefsmodules = ['cramfs','freevxfs','jffs','hfs','hfsplus','squashfs','udf'],
 ) {
 
+# (1) Patching and Software Updates
+
+#  exec {
+
+# (2) File System Configuration
+
   $checkdirectories[$key].each |String $directory| {
     if $::partitions["$directory"] {
       notify { "$directory exists":
@@ -41,6 +47,47 @@ class profile::infosec::ubuntu (
     enable => 'false',
   }
 
+# (3) Secure Boot Settings
+
+  file { '/boot/grub/grub.conf':
+    ensure      => 'file',
+    owner       => 'root',
+    group       => 'root',
+    permissions => 0600,
+  }
+
+# (4) Additional Process Hardening
+
+  file_line { 'Core Dump Limits':
+    path  => '/etc/security/limits.conf',
+    line  => '* hard core 0',
+    match => '* hard core',
+  }
+
+  file_line { 'Core Dump Config':
+    path  => '/etc/sysctl.conf',
+    line  => 'fs.suid_dumpable = 0',
+    match => 'fs.suid_dumpable = ',
+  }
+
+  file_line { 'Randomize VA Space':
+    path  => '/etc/sysctl.conf',
+    line  => 'kernel.randomize_va_space = 2',
+    match => 'kernel.randomize_va_space = ',
+  }
+
+#  Not clear that prelink will be installed at all?
+#  exec { 'disable prelink':
+#    command => '/usr/sbin/prelink -ua',
+#    unless  => '/usr/sbin/prelink'
+#  }
+
+  service { 'apparmor':
+    ensure => 'running',
+    enable => true,
+  }
+
+# (5) OS Services
 
 }
 
