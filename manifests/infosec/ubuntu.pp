@@ -151,7 +151,7 @@ class profile::infosec::ubuntu (
 
     exec { '$setting':
       command => "/sbin/sysctl -w $setting=$networksettings[$setting]",
-      unless  => "[ `/sbin/sysctl -n $setting"` = $networksettings[$setting] ]",
+      unless  => "[ `/sbin/sysctl -n $setting` = $networksettings[$setting] ]",
     }
   }
 
@@ -205,8 +205,23 @@ class profile::infosec::ubuntu (
       mode    => 400,
       recurse => true,
     }
+  }
 
+# We will likely need to set some parameters in hiera
+  include pam
+  include ssh
 
+# (10) User Accounts and Environment
 
+# (11) Warning Banners
+
+# We will need to set the actual banner in hiera.
+  include motd
+
+# (12) Verify System File Permissions
+
+# (13) Review User and Group Settings
+
+# (14) Additional Configuration Settings
 }
 
