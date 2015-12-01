@@ -116,15 +116,17 @@ class profile::infosec::ubuntu (
 # (5) OS Services
 
   $disableservices.each |String $service| {
-     service { "$service":
-       ensure => 'stopped',
-       enable => false,
-     }
+     if member($::services, $service) {
+       service { "$service":
+         ensure => 'stopped',
+         enable => false,
+         before => Package[$service],
+       }
 
-     package { "$service":
-       ensure => 'absent',
-     }
-  }
+       package { "$service":
+         ensure => 'absent',
+       }
+    }
 
 # (6) Special Purpose Services
 
