@@ -57,7 +57,7 @@ class profile::infosec::ubuntu (
     }
   }
 
-  $disablefsmodule.each |String $module| {
+  $disablemodules.each |String $module| {
     file_line { "$module":
       path   => '/etc/modprobe.d/blacklist',
       line   => "blacklist $module",
