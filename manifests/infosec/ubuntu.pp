@@ -223,5 +223,9 @@ class profile::infosec::ubuntu (
 # (13) Review User and Group Settings
 
 # (14) Additional Configuration Settings
+
+# Apt sources should be defined in hiera.
+  include apt
+
 }
 
