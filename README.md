@@ -1,1 +1,1 @@
-# paypal-puppet-profile
+# client-puppet-profile
